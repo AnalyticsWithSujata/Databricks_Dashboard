@@ -1,0 +1,1695 @@
+{
+  "datasets": [
+    {
+      "name": "925ea7c8",
+      "displayName": "Opportunities",
+      "queryLines": [
+        "\n",
+        "SELECT *\n",
+        "FROM ca_opportunities;"
+      ],
+      "columns": [
+        {
+          "displayName": "deal_size",
+          "description": "Buckets the deal opportunity into Small, Medium, and Large",
+          "expression": "CASE\n  WHEN amount < 500  THEN 'Small'\n  WHEN amount < 5000 THEN 'Medium'\n  ELSE 'Large'\nEND"
+        }
+      ],
+      "catalog": "learn_ai_bi_analysts_sujatasahu8",
+      "schema": "aibi_dashboards"
+    },
+    {
+      "name": "ff7b6ba7",
+      "displayName": "FullOrdersData",
+      "queryLines": [
+        "SELECT\n",
+        "  c.customername,\n",
+        "  c.province,\n",
+        "  o.orderdate,\n",
+        "  YEAR(o.orderdate) AS year,\n",
+        "  p.productname,\n",
+        "  o.orderamt,\n",
+        "  o.quantity,\n",
+        "  o.salesrep\n",
+        "FROM ca_orders AS o\n",
+        "  INNER JOIN ca_customers AS c\n",
+        "  ON o.customerid = c.customerid\n",
+        "  INNER JOIN ca_products AS p\n",
+        "  ON o.productid = p.productid;"
+      ],
+      "catalog": "learn_ai_bi_analysts_sujatasahu8",
+      "schema": "aibi_dashboards"
+    },
+    {
+      "name": "b5cd2c4e",
+      "displayName": "SalesTargets",
+      "queryLines": [
+        "SELECT\n",
+        "  t.target_set_date,\n",
+        "  t.target_year,\n",
+        "  t.sales_target,\n",
+        "  ROUND(SUM(o.orderamt), 2)                                       AS actual_sales,\n",
+        "  ROUND(SUM(o.orderamt) - t.sales_target, 2)                      AS variance,\n",
+        "  ROUND((SUM(o.orderamt) - t.sales_target) / t.sales_target * 100, 2) AS variance_pct,\n",
+        "  CASE\n",
+        " WHEN SUM(o.orderamt) >= t.sales_target THEN 'HIT'\n",
+        " ELSE 'MISS'\n",
+        "  END                                                             AS status,\n",
+        "  t.notes\n",
+        "FROM ca_sales_targets AS t\n",
+        "  INNER JOIN ca_orders AS o\n",
+        "  ON YEAR(o.orderdate) = t.target_year\n",
+        "GROUP BY t.target_set_date, t.target_year, t.sales_target, t.notes\n",
+        "ORDER BY t.target_year DESC;"
+      ],
+      "catalog": "learn_ai_bi_analysts_sujatasahu8",
+      "schema": "aibi_dashboards"
+    },
+    {
+      "name": "44399360",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        ""
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "30978c16",
+      "displayName": "Canada Sales Overview",
+      "layout": [
+        {
+          "widget": {
+            "name": "eed9a8b3",
+            "multilineTextboxSpec": {
+              "lines": [
+                "#### <span style=\"text-align:center;display:block\"><span style=\"font-size: 24px;color: #00A972;\">Canada Sales Dashboard</span></span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 9,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "actual-sales",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b5cd2c4e",
+                  "fields": [
+                    {
+                      "name": "sum(sales_target)",
+                      "expression": "SUM(`sales_target`)"
+                    },
+                    {
+                      "name": "sum(actual_sales)",
+                      "expression": "SUM(`actual_sales`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "headerAlignment": "left",
+                "title": {
+                  "value": "Current Total Sales by Sales Target",
+                  "fields": []
+                },
+                "description": {
+                  "value": "Total order amount vs. annual sales target",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(actual_sales)",
+                  "style": {
+                    "fontWeight": 700,
+                    "fontStyle": "normal",
+                    "fontColor": "#003B5C",
+                    "fontFamily": "Inter",
+                    "fontSize": 36,
+                    "rules": [
+                      {
+                        "condition": {
+                          "operator": "<"
+                        },
+                        "fontColor": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ]
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "CAD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "significantFigures": {
+                      "type": "all"
+                    }
+                  }
+                },
+                "target": {
+                  "fieldName": "sum(sales_target)",
+                  "change": {
+                    "type": "numeric"
+                  },
+                  "style": {
+                    "fontWeight": 500,
+                    "fontStyle": "normal",
+                    "fontSize": 16,
+                    "fontColor": "#6F7378",
+                    "fontFamily": "Inter"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "c06b6048",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "headerAlignment": "left",
+                "title": {
+                  "value": "Total Orders",
+                  "fields": []
+                },
+                "description": {
+                  "value": "Total orders placed",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(*)",
+                  "style": {
+                    "fontWeight": 700,
+                    "fontStyle": "normal"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 3,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "4f828648",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "sum(quantity)",
+                      "expression": "SUM(`quantity`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "headerAlignment": "left",
+                "title": {
+                  "value": "Total Units Sold",
+                  "fields": []
+                },
+                "description": {
+                  "value": "Total Units Sold",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(quantity)",
+                  "style": {
+                    "fontWeight": 700,
+                    "fontStyle": "normal"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 3,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "order-sales-year-sales-target",
+            "queries": [
+              {
+                "name": "combo_primary_1",
+                "query": {
+                  "datasetName": "b5cd2c4e",
+                  "fields": [
+                    {
+                      "name": "yearly(target_set_date)",
+                      "expression": "DATE_TRUNC(\"YEAR\", `target_set_date`)"
+                    },
+                    {
+                      "name": "actual_sales",
+                      "expression": "`actual_sales`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              },
+              {
+                "name": "combo_primary_2",
+                "query": {
+                  "datasetName": "b5cd2c4e",
+                  "fields": [
+                    {
+                      "name": "yearly(target_set_date)",
+                      "expression": "DATE_TRUNC(\"YEAR\", `target_set_date`)"
+                    },
+                    {
+                      "name": "sales_target",
+                      "expression": "`sales_target`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Order Sales by Year and Sales Target",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "combo",
+              "encodings": {
+                "x": {
+                  "fieldName": "yearly(target_set_date)",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": false,
+                    "hideTitle": false
+                  },
+                  "displayName": "YEAR",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "layers": [
+                    {
+                      "visual": "bar",
+                      "encodings": {
+                        "value": {
+                          "fields": [
+                            {
+                              "fieldName": "actual_sales",
+                              "displayName": "Actual Sales"
+                            }
+                          ]
+                        },
+                        "color": {
+                          "legend": {
+                            "hide": true
+                          }
+                        },
+                        "label": {
+                          "show": false
+                        }
+                      },
+                      "queryName": "combo_primary_1"
+                    },
+                    {
+                      "visual": "line",
+                      "mark": {
+                        "lineShape": "linear"
+                      },
+                      "encodings": {
+                        "value": {
+                          "fields": [
+                            {
+                              "fieldName": "sales_target",
+                              "displayName": "sales target"
+                            }
+                          ]
+                        },
+                        "color": {
+                          "legend": {
+                            "hide": true
+                          }
+                        },
+                        "label": {
+                          "show": false
+                        }
+                      },
+                      "queryName": "combo_primary_2"
+                    }
+                  ],
+                  "axis": {
+                    "hideLabels": false,
+                    "hideGrid": true,
+                    "hideTitle": true
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "88dc107e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "productname",
+                      "expression": "`productname`"
+                    },
+                    {
+                      "name": "yearly(orderdate)",
+                      "expression": "DATE_TRUNC(\"YEAR\", `orderdate`)"
+                    },
+                    {
+                      "name": "sum(orderamt)",
+                      "expression": "SUM(`orderamt`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "headerAlignment": "left",
+                "showDescription": true,
+                "showTitle": true,
+                "title": {
+                  "value": "Sales by Month and Product",
+                  "fields": []
+                },
+                "description": {
+                  "value": "Monthly order sales, colored by product",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "opacity": 0.8,
+                "layout": "stack"
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "yearly(orderdate)",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideTitle": true
+                  },
+                  "format": {
+                    "date": "locale-short-month",
+                    "type": "date"
+                  },
+                  "displayName": "Year",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(orderamt)",
+                  "axis": {
+                    "hideGrid": false,
+                    "hideTitle": true
+                  },
+                  "format": {
+                    "abbreviation": "compact",
+                    "currencyCode": "CAD",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-currency"
+                  },
+                  "displayName": "Sales",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "productname",
+                  "displayName": "Product",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 5,
+            "width": 8,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "b345845a",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "province",
+                      "expression": "`province`"
+                    },
+                    {
+                      "name": "productname",
+                      "expression": "`productname`"
+                    },
+                    {
+                      "name": "sum(orderamt)",
+                      "expression": "SUM(`orderamt`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "headerAlignment": "left",
+                "showTitle": true,
+                "title": {
+                  "value": "Sales Flow: Province to Product",
+                  "fields": []
+                }
+              },
+              "version": 1,
+              "widgetType": "sankey",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(orderamt)",
+                  "displayName": "Order Amount"
+                },
+                "stages": [
+                  {
+                    "fieldName": "province",
+                    "displayName": "Province"
+                  },
+                  {
+                    "fieldName": "productname",
+                    "displayName": "Product"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ae7e4744",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "province",
+                      "expression": "`province`"
+                    },
+                    {
+                      "name": "sum(orderamt)",
+                      "expression": "SUM(`orderamt`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "headerAlignment": "left",
+                "showTitle": true,
+                "title": {
+                  "value": "Province Contribution to Total Revenue",
+                  "fields": []
+                }
+              },
+              "version": 3,
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  }
+                ],
+                "layout": "stack"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "province",
+                  "axis": {
+                    "hideGrid": true
+                  },
+                  "displayName": "Province",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(orderamt)",
+                  "axis": {
+                    "hideGrid": false,
+                    "hideTitle": false
+                  },
+                  "format": {
+                    "abbreviation": "compact",
+                    "currencyCode": "CAD",
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-currency"
+                  },
+                  "displayName": "Order Amount (CAD)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 9,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "296f0a6d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "productname",
+                      "expression": "`productname`"
+                    },
+                    {
+                      "name": "province",
+                      "expression": "`province`"
+                    },
+                    {
+                      "name": "sum(orderamt)",
+                      "expression": "SUM(`orderamt`)"
+                    }
+                  ],
+                  "cubeGroupingSets": {
+                    "sets": [
+                      {
+                        "fieldNames": [
+                          "productname"
+                        ]
+                      },
+                      {
+                        "fieldNames": [
+                          "province"
+                        ]
+                      }
+                    ]
+                  },
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`productname`"
+                    },
+                    {
+                      "direction": "ASC",
+                      "expression": "`province`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "headerAlignment": "left",
+                "showTitle": true,
+                "title": {
+                  "value": "Sales by Product and Province",
+                  "fields": []
+                }
+              },
+              "version": 4,
+              "widgetType": "pivot",
+              "encodings": {
+                "rows": {
+                  "fields": [
+                    {
+                      "fieldName": "productname",
+                      "displayName": "Product",
+                      "scale": {
+                        "type": "categorical"
+                      }
+                    }
+                  ]
+                },
+                "columns": {
+                  "fields": [
+                    {
+                      "fieldName": "province",
+                      "displayName": "Province",
+                      "scale": {
+                        "type": "categorical"
+                      }
+                    }
+                  ]
+                },
+                "cells": {
+                  "fields": [
+                    {
+                      "fieldName": "sum(orderamt)",
+                      "format": {
+                        "abbreviation": "compact",
+                        "currencyCode": "CAD",
+                        "decimalPlaces": {
+                          "places": 1,
+                          "type": "max"
+                        },
+                        "type": "number-currency"
+                      },
+                      "displayName": "Order Amount (CAD)",
+                      "cellType": "text",
+                      "style": {
+                        "applyTo": "background",
+                        "colorScale": {
+                          "scale": {
+                            "colorRamp": {
+                              "mode": "scheme",
+                              "scheme": "blues"
+                            },
+                            "type": "quantitative"
+                          }
+                        },
+                        "type": "color-scale"
+                      }
+                    }
+                  ],
+                  "displayAs": "rows"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "f530dab6",
+            "queries": [
+              {
+                "name": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d5192f76174d840507a4ea847716_province",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "province",
+                      "expression": "`province`"
+                    },
+                    {
+                      "name": "province_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "province",
+                    "queryName": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d5192f76174d840507a4ea847716_province"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "591fd8d0",
+            "imageSpec": {
+              "useSeparateLightDarkImages": true,
+              "image": {
+                "source": {
+                  "url": "https://dbc-1f41098e-38af.cloud.databricks.com/ajax-api/2.0/workspace/export?path=/Users/sujatasahu8%40gmail.com/AI%20BI%20for%20Data%20Analysts/Includes/business-icon/canadan_company_icon.png&direct_download=true&format=AUTO&o=7474650654212369"
+                },
+                "sourceLight": {
+                  "url": "https://dbc-1f41098e-38af.cloud.databricks.com/ajax-api/2.0/workspace/export?path=/Users/sujatasahu8%40gmail.com/AI%20BI%20for%20Data%20Analysts/Includes/business-icon/canadan_company_icon.png&direct_download=true&format=AUTO&o=7474650654212369"
+                }
+              },
+              "frame": {},
+              "style": {
+                "sizeMode": "SIZE_MODE_FIT",
+                "horizontalAlign": "HORIZONTAL_ALIGN_CENTER"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "5b78be6a",
+      "displayName": "Opportunities Pipeline",
+      "layout": [
+        {
+          "widget": {
+            "name": "pipeline-header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "#### <span style=\"text-align:center;display:block\"><span style=\"font-size: 24px;color: #003B5C;\">Opportunities Pipeline</span></span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "total-opportunities",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "count(opportunityid)",
+                      "expression": "COUNT(`opportunityid`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Opportunities"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(opportunityid)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "pipeline-value",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Pipeline Value",
+                  "fields": []
+                }
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(amount)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "avg-deal-value",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "avg(amount)",
+                      "expression": "AVG(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Average Deal Value"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(amount)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "value-by-phase",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "phase",
+                      "expression": "`phase`"
+                    },
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Pipeline Value by Phase"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "phase",
+                  "displayName": "phase",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(amount)",
+                  "displayName": "Pipeline Value",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "phase",
+                  "displayName": "phase",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "amount-by-month",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "monthly(date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `date`)"
+                    },
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Opportunity Amount by Month"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(date)",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(amount)",
+                  "displayName": "Opportunity Amount",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 4,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "value-by-province",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "province",
+                      "expression": "`province`"
+                    },
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Pipeline Value by Province"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "province",
+                  "displayName": "province",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(amount)",
+                  "displayName": "Pipeline Value",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "province",
+                  "displayName": "province",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "value-by-rep",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "salesrep",
+                      "expression": "`salesrep`"
+                    },
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Pipeline Value by Sales Rep"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "salesrep",
+                  "displayName": "salesrep",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(amount)",
+                  "displayName": "Pipeline Value",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "salesrep",
+                  "displayName": "salesrep",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 8,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "opps-by-deal-size",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "count(opportunityid)",
+                      "expression": "COUNT(`opportunityid`)"
+                    },
+                    {
+                      "name": "deal_size",
+                      "expression": "`deal_size`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Opportunities by Deal Size"
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "count(opportunityid)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Opportunities"
+                },
+                "color": {
+                  "fieldName": "deal_size",
+                  "displayName": "deal_size",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 8,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "opportunity-details",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "opportunityid",
+                      "expression": "`opportunityid`"
+                    },
+                    {
+                      "name": "customerid",
+                      "expression": "`customerid`"
+                    },
+                    {
+                      "name": "productid",
+                      "expression": "`productid`"
+                    },
+                    {
+                      "name": "province",
+                      "expression": "`province`"
+                    },
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "amount",
+                      "expression": "`amount`"
+                    },
+                    {
+                      "name": "salesrep",
+                      "expression": "`salesrep`"
+                    },
+                    {
+                      "name": "phase",
+                      "expression": "`phase`"
+                    },
+                    {
+                      "name": "deal_size",
+                      "expression": "`deal_size`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Opportunity Details"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "opportunityid"
+                  },
+                  {
+                    "fieldName": "customerid"
+                  },
+                  {
+                    "fieldName": "productid"
+                  },
+                  {
+                    "fieldName": "province"
+                  },
+                  {
+                    "fieldName": "date"
+                  },
+                  {
+                    "fieldName": "amount"
+                  },
+                  {
+                    "fieldName": "salesrep"
+                  },
+                  {
+                    "fieldName": "phase"
+                  },
+                  {
+                    "fieldName": "deal_size"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "31158976",
+            "queries": [
+              {
+                "name": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d51807c41f158e50f23d16db360d_phase",
+                "query": {
+                  "datasetName": "925ea7c8",
+                  "fields": [
+                    {
+                      "name": "phase",
+                      "expression": "`phase`"
+                    },
+                    {
+                      "name": "phase_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "phase",
+                    "queryName": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d51807c41f158e50f23d16db360d_phase"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "c65c3d2e",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "year",
+            "queries": [
+              {
+                "name": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d5192f76174d840507a4ea847716_year",
+                "query": {
+                  "datasetName": "ff7b6ba7",
+                  "fields": [
+                    {
+                      "name": "year",
+                      "expression": "`year`"
+                    },
+                    {
+                      "name": "year_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d51a22d11621a770ca0b572f4eaa_target_year",
+                "query": {
+                  "datasetName": "b5cd2c4e",
+                  "fields": [
+                    {
+                      "name": "target_year",
+                      "expression": "`target_year`"
+                    },
+                    {
+                      "name": "target_year_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": {
+                  "value": "Year",
+                  "fields": []
+                }
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "year",
+                    "queryName": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d5192f76174d840507a4ea847716_year"
+                  },
+                  {
+                    "fieldName": "target_year",
+                    "queryName": "dashboards/01f1d517316d134e812f01e5a2d09afa/datasets/01f1d51a22d11621a770ca0b572f4eaa_target_year"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#E6E9EA",
+        "dark": "#1E2931"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#15181C"
+      },
+      "widgetBorderColor": {
+        "light": "#F3F5F6",
+        "dark": "#21292F"
+      },
+      "fontColor": {
+        "light": "#1A2127",
+        "dark": "#EEF0F2"
+      },
+      "selectionColor": {
+        "light": "#0E7AB9",
+        "dark": "#41ADEC"
+      },
+      "visualizationColors": [
+        "#A6CEE3",
+        "#1F78B4",
+        "#B2DF8A",
+        "#33A02C",
+        "#FB9A99",
+        "#E31A1C",
+        "#FDBF6F",
+        "#FF7F00",
+        "#CAB2D6",
+        "#6A3D9A",
+        "#FFFF99",
+        "#B15928"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "fontFamily": "Inter",
+      "widgetPadding": 8,
+      "widgetMargin": 4,
+      "widgetCornerRadius": 4,
+      "widgetShadow": 0,
+      "continuousGradient": {
+        "lightMode": {
+          "fromCategoricalIndex": 0
+        },
+        "darkMode": {
+          "fromCategoricalIndex": 0
+        }
+      },
+      "fontSettings": {
+        "base": {
+          "fontFamily": "Inter",
+          "fontColor": {
+            "light": "#1A2127",
+            "dark": "#EEF0F2"
+          },
+          "fontSize": 12,
+          "fontWeight": 400
+        },
+        "widgetTitle": {
+          "fontSize": 14,
+          "fontWeight": 500
+        },
+        "widgetDescription": {
+          "fontSize": 12,
+          "fontWeight": 400
+        },
+        "fieldTitle": {
+          "textCase": "TEXT_CASE_UPPERCASE",
+          "fontColor": {
+            "light": "#31373D",
+            "dark": "#D6D8DA"
+          },
+          "fontSize": 11,
+          "fontWeight": 400
+        },
+        "fieldValue": {
+          "fontColor": {
+            "light": "#31373D",
+            "dark": "#D6D8DA"
+          },
+          "fontSize": 11,
+          "fontWeight": 400
+        }
+      },
+      "gridLineColor": {
+        "light": "#D6D7D8",
+        "dark": "#3C3E42"
+      },
+      "axisLineColor": {
+        "light": "#B0B4B6",
+        "dark": "#555E64"
+      }
+    },
+    "applyModeEnabled": false
+  }
+}
